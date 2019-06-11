@@ -1,0 +1,76 @@
+SRC=..
+VPATH=${SRC}/include
+CFLAGS= -I. -I${SRC}/include -I${SRC}/common -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public \
+	-I$(ORACLE_HOME)/plsql/public -I$(ORACLE_HOME)/network/public -I$(ORACLE_HOME)/precomp/public
+
+LDFLAGS=-L. -L${SRC} -L${SRC}/common -L${SRC}/../lib -lsocket -lnsl
+SOFLAGS=-shared
+LD=/usr/ccs/bin/ld
+CC=cc
+
+DIST=../.dist/iasc/src
+
+YACC=/usr/ccs/bin/yacc -dv
+LEX=/usr/ccs/bin/lex
+
+SUBDIRS=common iasClient iasSend iasManager iasSendServer iasStoreOutput iasSessionServer iasSessionBroker iasMsgLogger iasSessionInterface
+INSTALL_TARGET=${HOME}
+
+PWD=pwd
+
+# executable name for test log writer program
+log_writer=pmd
+
+# name for Utility Process Info module
+utlProcessInfo=utlSunProcessInfo
+
+# name for platform specific convert module
+bscConvert_clctr=bscConvertIDNX
+
+# name for network specific convert module
+bscConvert_clctr_nw=bscBdf
+bscConvert_clctr_nw_o=$(bscConvert_clctr_nw).o
+
+# additional platform specific convert module dependencies
+bscConvert_clctr_deps=y.tab.c lex.yy.c
+
+# additional platform specific convert module link libraries
+bscConvert_clctr_lnks=-ll -ly
+
+# additional platform specific programs to build
+execs_clctr=bscFileOpen bscArchive $(log_writer)
+
+# additional platform specific scripts to build
+scripts_clctr=umsCmdRelayTcl umsCmdRelayTcl.sh ngenHPOVdump ngenCronEnv
+
+# additional platform specific TCL library packages to build
+libpkgs_clctr=ngenNetwork.tcl utlTelnet.tcl
+
+###########################################################################
+#                        Oracle specific stuff                            #
+###########################################################################
+
+USER=autoadmin/autoadmin@ias
+PCC      = ${ORACLE_HOME}/bin/proc
+PCCINC   = ${ORACLE_HOME}/proc/lib
+PCCFLAGS = include=${PCCINC} ireclen=132 oreclen=132 sqlcheck=full \
+	   ltype=none parse=none
+
+.SUFFIXES: .pc
+
+# oracle libs
+oralibs=-L$(ORACLE_HOME)/lib -lclntsh -lnsl -lsocket -lgen -ldl -lsched \
+	-R$(ORACLE_HOME)/lib -laio -lposix4 -lkstat -lm -lthread
+
+extproclibs1=-G -L$(ORACLE_HOME)/lib -R$(ORACLE_HOME)/lib
+extproclibs2=-lclntsh $(ORACLE_HOME)/rdbms/lib/kpuadef.o  \
+        `sed -e 's/-ljava//g' $(ORACLE_HOME)/lib/ldflags` \
+	-lnsgr8 -lnzjs8 -ln8 -lnl8 -lnro8 `sed -e 's/-ljava//g' $(ORACLE_HOME)/lib/ldflags` \
+	-lnsgr8 -lnzjs8 -ln8 -lnl8 -lclient8  -lvsn8 -lwtc8  -lcommon8 -lgeneric8 -lwtc8 -lmm \
+	-lnls8  -lcore8 -lnls8 -lcore8  -lnls8 `sed -e 's/-ljava//g' $(ORACLE_HOME)/lib/ldflags` \
+	-lnsgr8 -lnzjs8 -ln8 -lnl8 -lnro8 `sed -e 's/-ljava//g' $(ORACLE_HOME)/lib/ldflags` \
+	-lnsgr8 -lnzjs8 -ln8 -lnl8 -lclient8  -lvsn8 -lwtc8  -lcommon8 -lgeneric8  -ltrace8 -lnls8  \
+	-lcore8 -lnls8 -lcore8  -lnls8  -lclient8  -lvsn8 -lwtc8  -lcommon8 -lgeneric8 -lnls8  \
+	-lcore8 -lnls8 -lcore8  -lnls8  `cat $(ORACLE_HOME)/lib/sysliblist` `if [ -f /usr/lib/libsched.so ] ; then echo -lsched ; else true; fi` \
+	-R$(ORACLE_HOME)/lib -laio  -lposix4 -lkstat -lm  -lthread $(ORACLE_HOME)/lib/libpls8.a
+
