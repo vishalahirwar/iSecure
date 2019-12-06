@@ -2,7 +2,7 @@ PACKAGE=ias
 include Makedefs.ias
 BROKERDIRS=iasSessionBroker iasSessionInterface iasMsgLogger iasManager iasClient
 TRIAGEDIRS=common iasManager iasSessionServer 
-
+##Vishal added code for Linux RHEL migration...
 all:
 	@echo "Making all in `$(PWD)`"
 	@for i in $(SUBDIRS); do \
